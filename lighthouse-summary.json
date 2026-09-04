@@ -1,0 +1,34 @@
+{
+  "scores": {
+    "Performance": 81,
+    "Accessibility": 83,
+    "Best Practices": 96,
+    "SEO": 100
+  },
+  "metrics": {
+    "First Contentful Paint": {
+      "displayValue": "2.5 s",
+      "score": 69
+    },
+    "Largest Contentful Paint": {
+      "displayValue": "3.2 s",
+      "score": 72
+    },
+    "Total Blocking Time": {
+      "displayValue": "330 ms",
+      "score": 75
+    },
+    "Cumulative Layout Shift": {
+      "displayValue": "0",
+      "score": 100
+    },
+    "Speed Index": {
+      "displayValue": "3.5 s",
+      "score": 88
+    },
+    "Time to Interactive": {
+      "displayValue": "3.4 s",
+      "score": 93
+    }
+  }
+}

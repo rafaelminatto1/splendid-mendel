@@ -7,13 +7,15 @@ import {
   CheckCircle2, 
   Sparkles, 
   ArrowRight,
-  ExternalLink,
   ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { Evento, Participante } from '../types';
 import { db } from '../db';
 import { syncService } from '../services/syncService';
+
+import { formatNameTitleCase, isValidBrazilianCellPhone } from '../services/csvExport';
+import { DEFAULT_ORG_ID } from '../db';
 
 interface LayoutAProps {
   evento: Evento | null;
@@ -42,10 +44,10 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
   // Máscara dinâmica de telefone brasileiro (11) 98765-4321
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 11 && !value.startsWith('55')) value = value.slice(0, 11);
 
     if (value.length > 6) {
-      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7, 11)}`;
     } else if (value.length > 2) {
       value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
     } else if (value.length > 0) {
@@ -56,22 +58,32 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!nome.trim()) {
+    if (isSubmitting) return;
+
+    if (!nome.trim() || nome.trim().length < 2) {
+      alert('Por favor, digite seu nome.');
       nameInputRef.current?.focus();
       return;
     }
 
     const cleanDigits = telefone.replace(/\D/g, '');
-    if (cleanDigits.length < 10) {
-      alert('Por favor, digite um telefone com DDD válido.');
+    if (cleanDigits.length === 10) {
+      alert('Por favor, informe seu celular com o nono dígito (ex: 11 98765-4321).');
+      return;
+    }
+    if (!isValidBrazilianCellPhone(cleanDigits)) {
+      alert('Por favor, digite um número de WhatsApp válido com DDD (11 dígitos).');
       return;
     }
 
     setIsSubmitting(true);
+    const formattedName = formatNameTitleCase(nome);
+
     const novoParticipante: Participante = {
       id: crypto.randomUUID(),
-      evento_id: evento?.id || 'evento-geral',
-      nome: nome.trim(),
+      organization_id: DEFAULT_ORG_ID,
+      evento_id: evento?.id || '786ec561-bac1-471a-af67-817537d1328c',
+      nome: formattedName,
       contato: cleanDigits,
       instagram: '',
       segue_perfil: true,
@@ -96,7 +108,7 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
         colors: ['#005F73', '#81B29A', '#38bdf8'],
       });
 
-      setLastRegisteredName(nome.trim().split(' ')[0]);
+      setLastRegisteredName(formattedName.split(' ')[0]);
       setShowSuccessToast(true);
 
       // Reseta os campos para o próximo corredor
@@ -120,7 +132,7 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl h-full max-h-full flex flex-col justify-center px-2 sm:px-4 py-1 select-none">
+    <div className="w-full max-w-5xl h-full max-h-full flex flex-col justify-center px-2 sm:px-4 py-1 select-none overflow-y-auto">
       
       {/* Toast de Sucesso Flutuante */}
       {showSuccessToast && (
@@ -275,20 +287,6 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
               Aponte a Câmera
             </div>
           </div>
-
-          {/* Botão de Link Direto */}
-          <div className="relative z-10 w-full">
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-white/10 hover:bg-white/15 text-white text-[11px] font-semibold border border-white/10 transition"
-            >
-              <span>Abrir perfil no Instagram</span>
-              <ExternalLink className="w-3 h-3 text-slate-400" />
-            </a>
-          </div>
-
         </div>
 
       </div>

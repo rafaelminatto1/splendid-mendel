@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, initializeDatabase, DEFAULT_SETTINGS } from './db';
+import { db, initializeDatabase, DEFAULT_SETTINGS, findClosestEvent } from './db';
+import { syncService } from './services/syncService';
 import type { Evento, LayoutMode, AppSettings } from './types';
 import { Header } from './components/Header';
 import { LayoutA_SideBySide } from './components/LayoutA_SideBySide';
@@ -18,21 +19,73 @@ export const App: React.FC = () => {
   const [isSyncDiagnosticsOpen, setIsSyncDiagnosticsOpen] = useState(false);
   const [isKioskMode, setIsKioskMode] = useState(false);
 
-  // Consultas reativas no IndexedDB local
+  // Consultas reativas leves no IndexedDB local
   const eventos = useLiveQuery(() => db.eventos.orderBy('data_inicio').reverse().toArray(), []) || [];
-  const participantes = useLiveQuery(() => db.participantes.orderBy('created_at').reverse().toArray(), []) || [];
   const settings = useLiveQuery(() => db.settings.get('global_settings'), []) || DEFAULT_SETTINGS;
 
   useEffect(() => {
-    initializeDatabase().then(() => {
+    const initApp = async () => {
+      // 1. Inicializa o banco IndexedDB (configurações padrão, persistência Safari)
+      await initializeDatabase();
+
+      // 2. Garante que a corrida ativa mais próxima de hoje seja selecionada automaticamente mesmo após recarregamento offline
+      const localEvents = await db.eventos.toArray();
+      const closest = findClosestEvent(localEvents);
+      if (closest) {
+        await db.settings.update('global_settings', { active_evento_id: closest.id });
+      }
+
       setIsInitializing(false);
-    });
+
+      // 3. Puxa eventos ativos da nuvem (Neon) e atualiza seleção se novo evento mais próximo surgir
+      try {
+        const pulled = await syncService.pullActiveEvents();
+        if (pulled && pulled.length > 0) {
+          const updatedEvents = await db.eventos.toArray();
+          const newClosest = findClosestEvent(updatedEvents);
+          if (newClosest) {
+            await db.settings.update('global_settings', { active_evento_id: newClosest.id });
+          }
+        }
+      } catch (err) {
+        console.warn('Modo offline: inicializado com eventos locais.', err);
+      }
+    };
+
+    initApp();
+  }, []);
+
+  // Ao recuperar a conexão de rede, sincroniza eventos ativos da nuvem e garante seleção da corrida mais próxima
+  useEffect(() => {
+    const handleNetworkRecovery = async () => {
+      try {
+        const pulled = await syncService.pullActiveEvents();
+        if (pulled && pulled.length > 0) {
+          const currentEvents = await db.eventos.toArray();
+          const closest = findClosestEvent(currentEvents);
+          if (closest) {
+            await db.settings.update('global_settings', { active_evento_id: closest.id });
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao atualizar eventos após recuperação de rede:', err);
+      }
+    };
+
+    window.addEventListener('online', handleNetworkRecovery);
+    return () => {
+      window.removeEventListener('online', handleNetworkRecovery);
+    };
   }, []);
 
   // Evento selecionado atual
   const selectedEvento = React.useMemo(() => {
-    if (!settings.active_evento_id) return eventos[0] || null;
-    return eventos.find(e => e.id === settings.active_evento_id) || eventos[0] || null;
+    if (!eventos || eventos.length === 0) return null;
+    if (settings.active_evento_id) {
+      const found = eventos.find(e => e.id === settings.active_evento_id);
+      if (found) return found;
+    }
+    return findClosestEvent(eventos) || eventos[0] || null;
   }, [eventos, settings.active_evento_id]);
 
   const handleSelectEvento = async (eventoId: string) => {
@@ -76,6 +129,7 @@ export const App: React.FC = () => {
         onToggleLayout={handleToggleLayout}
         onEnterKioskMode={() => setIsKioskMode(!isKioskMode)}
         isKioskMode={isKioskMode}
+        passcodeExitKiosk={settings.passcode_exit_kiosk}
       />
 
       {/* Conteúdo Principal do Totem (ajustado para caber 100% no viewport do iPad) */}
@@ -96,35 +150,42 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Modais */}
-      <EventModal
-        isOpen={isCreateEventOpen}
-        onClose={() => setIsCreateEventOpen(false)}
-        onEventCreated={handleEventCreated}
-      />
+      {/* Modais com Renderização Sob Demanda (0ms latência e sem custo em idle) */}
+      {isCreateEventOpen && (
+        <EventModal
+          isOpen={isCreateEventOpen}
+          onClose={() => setIsCreateEventOpen(false)}
+          onEventCreated={handleEventCreated}
+        />
+      )}
 
-      <EventManagementModal
-        isOpen={isManagementOpen}
-        onClose={() => setIsManagementOpen(false)}
-        eventos={eventos}
-        selectedEvento={selectedEvento}
-        onSelectEvento={handleSelectEvento}
-        participantes={participantes}
-        onOpenCreateEvento={() => {
-          setIsManagementOpen(false);
-          setIsCreateEventOpen(true);
-        }}
-      />
+      {isManagementOpen && (
+        <EventManagementModal
+          isOpen={isManagementOpen}
+          onClose={() => setIsManagementOpen(false)}
+          eventos={eventos}
+          selectedEvento={selectedEvento}
+          onSelectEvento={handleSelectEvento}
+          onOpenCreateEvento={() => {
+            setIsManagementOpen(false);
+            setIsCreateEventOpen(true);
+          }}
+        />
+      )}
 
-      <KioskGuideModal
-        isOpen={isKioskGuideOpen}
-        onClose={() => setIsKioskGuideOpen(false)}
-      />
+      {isKioskGuideOpen && (
+        <KioskGuideModal
+          isOpen={isKioskGuideOpen}
+          onClose={() => setIsKioskGuideOpen(false)}
+        />
+      )}
 
-      <SyncDiagnosticsModal
-        isOpen={isSyncDiagnosticsOpen}
-        onClose={() => setIsSyncDiagnosticsOpen(false)}
-      />
+      {isSyncDiagnosticsOpen && (
+        <SyncDiagnosticsModal
+          isOpen={isSyncDiagnosticsOpen}
+          onClose={() => setIsSyncDiagnosticsOpen(false)}
+        />
+      )}
 
     </div>
   );

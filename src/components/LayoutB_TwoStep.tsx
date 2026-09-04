@@ -15,6 +15,9 @@ import type { Evento, Participante } from '../types';
 import { db } from '../db';
 import { syncService } from '../services/syncService';
 
+import { formatNameTitleCase, isValidBrazilianCellPhone } from '../services/csvExport';
+import { DEFAULT_ORG_ID } from '../db';
+
 interface LayoutBProps {
   evento: Evento | null;
   instagramHandle: string;
@@ -67,10 +70,10 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 11 && !value.startsWith('55')) value = value.slice(0, 11);
 
     if (value.length > 6) {
-      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7, 11)}`;
     } else if (value.length > 2) {
       value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
     } else if (value.length > 0) {
@@ -91,22 +94,32 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!nome.trim()) {
+    if (isSubmitting) return;
+
+    if (!nome.trim() || nome.trim().length < 2) {
+      alert('Por favor, digite seu nome.');
       nameInputRef.current?.focus();
       return;
     }
 
     const cleanDigits = telefone.replace(/\D/g, '');
-    if (cleanDigits.length < 10) {
-      alert('Por favor, digite um telefone com DDD válido.');
+    if (cleanDigits.length === 10) {
+      alert('Por favor, informe seu celular com o nono dígito (ex: 11 98765-4321).');
+      return;
+    }
+    if (!isValidBrazilianCellPhone(cleanDigits)) {
+      alert('Por favor, digite um número de WhatsApp válido com DDD (11 dígitos).');
       return;
     }
 
     setIsSubmitting(true);
+    const formattedName = formatNameTitleCase(nome);
+
     const novoParticipante: Participante = {
       id: crypto.randomUUID(),
-      evento_id: evento?.id || 'evento-geral',
-      nome: nome.trim(),
+      organization_id: DEFAULT_ORG_ID,
+      evento_id: evento?.id || '786ec561-bac1-471a-af67-817537d1328c',
+      nome: formattedName,
       contato: cleanDigits,
       instagram: '',
       segue_perfil: true,
@@ -131,7 +144,7 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
         colors: ['#005F73', '#81B29A', '#38bdf8', '#f59e0b'],
       });
 
-      setRegisteredRunner(nome.trim().split(' ')[0]);
+      setRegisteredRunner(formattedName.split(' ')[0]);
       setStep('success');
     } catch (err) {
       console.error('Erro ao salvar participante:', err);

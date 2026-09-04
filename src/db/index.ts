@@ -84,19 +84,25 @@ export async function requestStoragePersistence(): Promise<{ persisted: boolean;
   return { persisted, usageMb, quotaMb };
 }
 
+export const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
 /**
- * Encontra o evento cuja data de início está mais próxima da data atual (hoje).
+ * Encontra o evento cuja data de início está mais próxima da data atual (hoje),
+ * priorizando eventos com status 'ativo'.
  */
 export function findClosestEvent(eventos: Evento[]): Evento | null {
   if (!eventos || eventos.length === 0) return null;
 
+  const ativos = eventos.filter(e => e.status === 'ativo');
+  const pool = ativos.length > 0 ? ativos : eventos;
+
   const now = new Date();
   const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
-  let closest: Evento = eventos[0];
+  let closest: Evento = pool[0];
   let minDiff = Infinity;
 
-  for (const ev of eventos) {
+  for (const ev of pool) {
     if (!ev.data_inicio) continue;
     const parts = ev.data_inicio.split('-');
     if (parts.length < 3) continue;
@@ -133,19 +139,8 @@ export async function initializeDatabase(): Promise<AppSettings> {
 
     const sampleEventos: Evento[] = [
       {
-        id: 'ev-juventus-2026',
-        nome: 'Corrida do Juventus',
-        data_inicio: '2026-08-30',
-        local: 'Clube Atlético Juventus - Mooca / SP',
-        descricao: 'Ação com tenda de massagem esportiva e liberação miofascial pós-prova para atletas.',
-        gratuito: true,
-        status: 'concluido',
-        participantes_previstos: 350,
-        created_at: new Date('2026-08-20T10:00:00Z').toISOString(),
-        updated_at: new Date('2026-08-30T18:00:00Z').toISOString(),
-      },
-      {
-        id: 'ev-circuito-atletico-sp',
+        id: '786ec561-bac1-471a-af67-817537d1328c',
+        organization_id: DEFAULT_ORG_ID,
         nome: 'Circuito das Estações — Etapa Primavera',
         data_inicio: formatYMD(hoje),
         local: 'Parque Ibirapuera - São Paulo / SP',
@@ -157,7 +152,21 @@ export async function initializeDatabase(): Promise<AppSettings> {
         updated_at: hoje.toISOString(),
       },
       {
-        id: 'ev-meia-maratona-mooca',
+        id: '2f5a6b7c-8d9e-4f1a-b2c3-d4e5f6a7b8c9',
+        organization_id: DEFAULT_ORG_ID,
+        nome: 'Corrida do Juventus',
+        data_inicio: '2026-08-30',
+        local: 'Clube Atlético Juventus - Mooca / SP',
+        descricao: 'Ação com tenda de massagem esportiva e liberação miofascial pós-prova para atletas.',
+        gratuito: true,
+        status: 'concluido',
+        participantes_previstos: 350,
+        created_at: new Date('2026-08-20T10:00:00Z').toISOString(),
+        updated_at: new Date('2026-08-30T18:00:00Z').toISOString(),
+      },
+      {
+        id: '3a4b5c6d-7e8f-4a1b-9c2d-3e4f5a6b7c8d',
+        organization_id: DEFAULT_ORG_ID,
         nome: 'Meia Maratona da Mooca 2026',
         data_inicio: '2026-09-20',
         local: 'Rua Javari - São Paulo / SP',

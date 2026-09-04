@@ -68,4 +68,40 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    warmup: {
+      clientFiles: [
+        './src/App.tsx',
+        './src/components/Header.tsx',
+        './src/components/LayoutA_SideBySide.tsx',
+        './src/components/LayoutB_TwoStep.tsx',
+        './src/db/index.ts',
+        './src/services/syncService.ts',
+      ],
+    },
+  },
+  build: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    rolldownOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('dexie')) {
+              return 'vendor-db';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('canvas-confetti') || id.includes('qrcode.react')) {
+              return 'vendor-extras';
+            }
+          }
+        },
+      },
+    },
+  },
 });

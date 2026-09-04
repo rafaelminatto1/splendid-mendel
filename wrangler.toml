@@ -2,5 +2,8 @@ name = "activity-eventos-totem"
 compatibility_date = "2026-09-01"
 pages_build_output_dir = "dist"
 
+[placement]
+mode = "smart"
+
 [vars]
-# DATABASE_URL = "postgresql://neondb_owner:***@ep-purple-union-72678311.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL = "postgresql://neondb_owner:npg_4dNCP5AzamGk@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"

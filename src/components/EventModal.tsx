@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, Calendar, MapPin, Tag, Users, AlignLeft, Check } from 'lucide-react';
 import type { Evento } from '../types';
-import { db } from '../db';
+import { db, DEFAULT_ORG_ID } from '../db';
+import { syncService } from '../services/syncService';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -33,7 +34,8 @@ export const EventModal: React.FC<EventModalProps> = ({
 
     setIsSubmitting(true);
     const novoEvento: Evento = {
-      id: `ev-${Date.now()}`,
+      id: crypto.randomUUID(),
+      organization_id: DEFAULT_ORG_ID,
       nome: nome.trim(),
       data_inicio: dataInicio,
       local: local.trim() || undefined,
@@ -48,6 +50,8 @@ export const EventModal: React.FC<EventModalProps> = ({
 
     try {
       await db.eventos.add(novoEvento);
+      // Sincroniza imediatamente o novo evento com o Neon
+      syncService.syncEventosNow();
       onEventCreated(novoEvento);
       onClose();
       // Limpa os campos
@@ -63,8 +67,8 @@ export const EventModal: React.FC<EventModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 animate-in zoom-in-95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70">
+      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">

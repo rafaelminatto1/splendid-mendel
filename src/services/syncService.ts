@@ -42,6 +42,7 @@ class SyncService {
       // Checagem inicial de storage e contadores
       this.refreshStorageAndCounts();
       this.probeNetworkHealth();
+      this.pullActiveEvents().catch(() => {});
     }
   }
 
@@ -71,6 +72,7 @@ class SyncService {
         this.consecutiveFailures = 0;
         this.backoffUntil = 0;
         this.syncPendingData();
+        this.pullActiveEvents().catch(() => {});
       }
     }
   }
@@ -93,6 +95,14 @@ class SyncService {
     this.status.storageQuotaMb = storageInfo.quotaMb;
 
     try {
+      // Recupera automaticamente registros presos em 'syncing' quando o sync não está rodando
+      if (!this.status.isSyncing) {
+        const stuck = await db.participantes.where('sync_status').equals('syncing').toArray();
+        if (stuck.length > 0) {
+          await db.participantes.where('sync_status').equals('syncing').modify({ sync_status: 'pending' });
+        }
+      }
+
       const all = await db.participantes.toArray();
       this.status.pendingCount = all.filter(p => !p.synced).length;
       this.status.failedCount = all.filter(p => p.sync_status === 'failed').length;
@@ -101,6 +111,36 @@ class SyncService {
     }
     this.notify();
   }
+
+  /**
+   * Sincroniza imediatamente a lista de eventos com o Neon
+   */
+  public async syncEventosNow(): Promise<boolean> {
+    try {
+      const settings = await db.settings.get('global_settings');
+      const syncUrl = settings?.neon_sync_url || '/api/sync';
+      const eventos = await db.eventos.toArray();
+
+      const response = await fetch(syncUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Totem-Sync-Version': '2.0',
+        },
+        body: JSON.stringify({
+          eventos: eventos,
+          sync_timestamp: new Date().toISOString(),
+        }),
+      });
+
+      return response.ok;
+    } catch (e) {
+      console.warn('Erro ao sincronizar eventos:', e);
+      return false;
+    }
+  }
+
+
 
   /**
    * Prova real de rede (ping HTTP com timeout de 3.5s).
@@ -209,7 +249,7 @@ class SyncService {
           },
           body: JSON.stringify({
             participantes: chunk,
-            eventos: eventos,
+            eventos: i === 0 ? eventos : undefined,
             sync_timestamp: new Date().toISOString(),
           }),
         });
@@ -340,6 +380,90 @@ class SyncService {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Busca eventos ativos da nuvem (Neon PostgreSQL) via GET /api/sync
+   * e armazena no IndexedDB (Dexie) de forma resiliente a falhas de rede.
+   * Não sobrescreve nem apaga dados locais em caso de falha ou offline.
+   */
+  public async pullActiveEvents(): Promise<Evento[]> {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return db.eventos.toArray();
+    }
+
+    try {
+      const settings = await db.settings.get('global_settings');
+      const syncUrl = settings?.neon_sync_url || '/api/sync';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const response = await fetch(syncUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'X-Totem-Sync-Version': '2.0',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.warn(`Servidor retornou status HTTP ${response.status} ao puxar eventos.`);
+        return db.eventos.toArray();
+      }
+
+      const data = await response.json();
+      if (!data || !data.ok || !Array.isArray(data.eventos)) {
+        console.warn('Resposta inesperada de /api/sync GET:', data);
+        return db.eventos.toArray();
+      }
+
+      const rawEventos = data.eventos;
+      if (rawEventos.length === 0) {
+        return db.eventos.toArray();
+      }
+
+      // Normaliza eventos garantindo formato YYYY-MM-DD em data_inicio
+      const validEventos: Evento[] = rawEventos
+        .filter((e: any) => e && e.id && e.nome)
+        .map((e: any) => {
+          let dataInicio = e.data_inicio;
+          if (dataInicio && typeof dataInicio === 'string') {
+            dataInicio = dataInicio.trim().split('T')[0].split(' ')[0];
+          }
+          return {
+            id: e.id,
+            organization_id: e.organization_id || '00000000-0000-0000-0000-000000000001',
+            nome: e.nome,
+            descricao: e.descricao || undefined,
+            categoria: e.categoria || undefined,
+            local: e.local || undefined,
+            data_inicio: dataInicio || new Date().toISOString().split('T')[0],
+            data_fim: e.data_fim ? String(e.data_fim).trim().split('T')[0].split(' ')[0] : undefined,
+            hora_inicio: e.hora_inicio || undefined,
+            hora_fim: e.hora_fim || undefined,
+            gratuito: e.gratuito !== undefined ? Boolean(e.gratuito) : true,
+            link_whatsapp: e.link_whatsapp || undefined,
+            status: (e.status || 'ativo') as 'ativo' | 'concluido' | 'rascunho',
+            participantes_previstos: e.participantes_previstos ? Number(e.participantes_previstos) : undefined,
+            created_at: e.created_at || new Date().toISOString(),
+            updated_at: e.updated_at || new Date().toISOString(),
+          };
+        });
+
+      if (validEventos.length > 0) {
+        // bulkPut faz upsert dos eventos sem limpar ou descartar eventos existentes
+        await db.eventos.bulkPut(validEventos);
+      }
+
+      return db.eventos.toArray();
+    } catch (err: any) {
+      console.warn('Falha na requisição pullActiveEvents (mantendo cache local):', err);
+      return db.eventos.toArray();
+    }
   }
 
   public getStatus(): SyncStatus {
