@@ -10,7 +10,8 @@ import {
   Maximize2, 
   HelpCircle,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Activity
 } from 'lucide-react';
 import type { Evento, LayoutMode, SyncStatus } from '../types';
 import { syncService } from '../services/syncService';
@@ -23,6 +24,7 @@ interface HeaderProps {
   onOpenCreateEvento: () => void;
   onOpenManagement: () => void;
   onOpenKioskGuide: () => void;
+  onOpenSyncDiagnostics: () => void;
   layoutMode: LayoutMode;
   onToggleLayout: () => void;
   onEnterKioskMode: () => void;
@@ -36,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCreateEvento,
   onOpenManagement,
   onOpenKioskGuide,
+  onOpenSyncDiagnostics,
   layoutMode,
   onToggleLayout,
   onEnterKioskMode,
@@ -71,21 +74,25 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Indicador de status de rede minimalista */}
+        {/* Indicador de status de rede minimalista clicável para diagnósticos */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-slate-100 text-slate-700">
+          <button
+            onClick={onOpenSyncDiagnostics}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200"
+            title="Abrir diagnósticos de rede e sincronização"
+          >
             {syncStatus.isOnline ? (
               <>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-emerald-700">Online</span>
+                <span className="text-emerald-700">Online {syncStatus.latencyMs ? `(${syncStatus.latencyMs}ms)` : ''}</span>
               </>
             ) : (
               <>
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                <span className="text-amber-700">Offline ({syncStatus.pendingCount} pendentes)</span>
+                <span className="text-amber-700">Offline ({syncStatus.pendingCount} locais)</span>
               </>
             )}
-          </div>
+          </button>
 
           <button
             onClick={onEnterKioskMode}
@@ -233,19 +240,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Controles de Status, Layout e Totem */}
         <div className="flex items-center justify-end gap-2 flex-wrap">
           
-          {/* Status de Rede & Sincronização */}
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-            {syncStatus.isOnline ? (
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                <Wifi className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="hidden sm:inline">Online</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
-                <WifiOff className="w-3.5 h-3.5 text-amber-600" />
-                <span>Offline</span>
-              </div>
-            )}
+          {/* Status de Rede & Sincronização clicável */}
+          <button
+            onClick={onOpenSyncDiagnostics}
+            className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer group"
+            title="Clique para abrir diagnósticos detalhados de rede e sincronização"
+          >
+            {statusBadge(syncStatus)}
 
             {syncStatus.pendingCount > 0 && (
               <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
@@ -253,15 +254,8 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             )}
 
-            <button
-              onClick={() => syncService.syncPendingData()}
-              disabled={syncStatus.isSyncing || !syncStatus.isOnline}
-              className="ml-1 p-1 hover:bg-slate-200 rounded-lg text-slate-600 transition disabled:opacity-40"
-              title="Sincronizar agora com o banco central"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncStatus.isSyncing ? 'animate-spin text-[#005F73]' : ''}`} />
-            </button>
-          </div>
+            <Activity className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#005F73] transition ml-0.5" />
+          </button>
 
           {/* Alternador de Layout A / B */}
           <button
@@ -308,3 +302,26 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
+function statusBadge(status: SyncStatus) {
+  if (!status.isOnline) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+        <WifiOff className="w-3.5 h-3.5 text-amber-600" />
+        <span>Offline</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+      <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+      <span className="hidden sm:inline">Online</span>
+      {status.latencyMs && (
+        <span className="text-[10px] text-slate-500 font-normal">
+          {status.latencyMs}ms
+        </span>
+      )}
+    </div>
+  );
+}

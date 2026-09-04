@@ -114,6 +114,8 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
       observacoes: 'Cadastrado no Totem iPad (Layout B - 2 Etapas)',
       aceitou_comunicado: aceitouComunicado,
       synced: false,
+      sync_status: 'pending',
+      retry_count: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

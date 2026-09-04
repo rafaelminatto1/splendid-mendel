@@ -78,6 +78,8 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
       observacoes: 'Cadastrado no Totem iPad (Layout Lado a Lado)',
       aceitou_comunicado: aceitouComunicado,
       synced: false,
+      sync_status: 'pending',
+      retry_count: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

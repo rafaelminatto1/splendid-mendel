@@ -8,12 +8,14 @@ import { LayoutB_TwoStep } from './components/LayoutB_TwoStep';
 import { EventModal } from './components/EventModal';
 import { EventManagementModal } from './components/EventManagementModal';
 import { KioskGuideModal } from './components/KioskGuideModal';
+import { SyncDiagnosticsModal } from './components/SyncDiagnosticsModal';
 
 export const App: React.FC = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
   const [isKioskGuideOpen, setIsKioskGuideOpen] = useState(false);
+  const [isSyncDiagnosticsOpen, setIsSyncDiagnosticsOpen] = useState(false);
   const [isKioskMode, setIsKioskMode] = useState(false);
 
   // Consultas reativas no IndexedDB local
@@ -53,7 +55,7 @@ export const App: React.FC = () => {
           A
         </div>
         <h2 className="text-xl font-extrabold text-slate-800">Activity Fisioterapia</h2>
-        <p className="text-sm text-slate-500 mt-1">Carregando totem de eventos...</p>
+        <p className="text-sm text-slate-500 mt-1">Iniciando totem offline-first...</p>
       </div>
     );
   }
@@ -69,6 +71,7 @@ export const App: React.FC = () => {
         onOpenCreateEvento={() => setIsCreateEventOpen(true)}
         onOpenManagement={() => setIsManagementOpen(true)}
         onOpenKioskGuide={() => setIsKioskGuideOpen(true)}
+        onOpenSyncDiagnostics={() => setIsSyncDiagnosticsOpen(true)}
         layoutMode={settings.layout_mode}
         onToggleLayout={handleToggleLayout}
         onEnterKioskMode={() => setIsKioskMode(!isKioskMode)}
@@ -116,6 +119,11 @@ export const App: React.FC = () => {
       <KioskGuideModal
         isOpen={isKioskGuideOpen}
         onClose={() => setIsKioskGuideOpen(false)}
+      />
+
+      <SyncDiagnosticsModal
+        isOpen={isSyncDiagnosticsOpen}
+        onClose={() => setIsSyncDiagnosticsOpen(false)}
       />
 
     </div>

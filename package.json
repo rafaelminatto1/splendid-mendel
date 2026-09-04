@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "canvas-confetti": "^1.9.4",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
