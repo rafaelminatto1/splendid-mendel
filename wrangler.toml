@@ -5,5 +5,6 @@ pages_build_output_dir = "dist"
 [placement]
 mode = "smart"
 
-[vars]
-DATABASE_URL = "postgresql://neondb_owner:npg_4dNCP5AzamGk@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+# Secrets (DATABASE_URL, WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID)
+# are stored as encrypted Cloudflare Pages Secrets — NOT here.
+# To update: wrangler pages secret put <SECRET_NAME> --project-name activity-eventos-totem
