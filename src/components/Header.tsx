@@ -107,25 +107,25 @@ export const Header: React.FC<HeaderProps> = ({
   }
 
   return (
-    <header className="bg-white border-b border-slate-200 px-4 md:px-8 py-3.5 shadow-sm sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+    <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-2 sm:py-2.5 shadow-sm sticky top-0 z-40 flex-shrink-0">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 md:gap-4">
         
         {/* Marca & Logo */}
-        <div className="flex items-center justify-between md:justify-start gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#005F73] to-[#004655] flex items-center justify-center text-white font-extrabold shadow-md shadow-[#005F73]/25">
-              <span className="text-xl">A</span>
+        <div className="flex items-center justify-between md:justify-start gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#005F73] to-[#004655] flex items-center justify-center text-white font-extrabold shadow-md shadow-[#005F73]/25 flex-shrink-0">
+              <span className="text-lg">A</span>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-extrabold text-slate-900 tracking-tight text-lg">
+                <h1 className="font-extrabold text-slate-900 tracking-tight text-base sm:text-lg leading-tight">
                   Activity Fisioterapia
                 </h1>
-                <span className="bg-teal-50 text-[#005F73] text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-200">
+                <span className="bg-teal-50 text-[#005F73] text-[9px] font-bold px-1.5 py-0.2 rounded-full border border-teal-200">
                   TOTEM IPAD
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-[11px] text-slate-500 font-medium leading-tight">
                 Check-in de Massagem & Automação Meta
               </p>
             </div>

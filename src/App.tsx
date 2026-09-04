@@ -61,7 +61,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F9F7] flex flex-col text-slate-900 selection:bg-teal-100">
+    <div className="h-[100dvh] max-h-[100dvh] w-full overflow-hidden flex flex-col bg-[#F9F9F7] text-slate-900 selection:bg-teal-100">
       
       {/* Cabeçalho */}
       <Header
@@ -78,8 +78,8 @@ export const App: React.FC = () => {
         isKioskMode={isKioskMode}
       />
 
-      {/* Conteúdo Principal do Totem */}
-      <main className="flex-1 flex items-center justify-center p-2 sm:p-4 md:p-6">
+      {/* Conteúdo Principal do Totem (ajustado para caber 100% no viewport do iPad) */}
+      <main className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-2 sm:p-3 lg:p-4">
         {settings.layout_mode === 'side_by_side' ? (
           <LayoutA_SideBySide
             evento={selectedEvento}

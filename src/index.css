@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  /* Otimizações táteis para iPad 10 / Tablets */
-  html, body {
+  /* Otimizações táteis e trava de viewport para iPad 10 / Tablets em modo Kiosk */
+  html, body, #root {
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -16,21 +21,11 @@
   }
 }
 
-/* Custom Scrollbar suave */
+/* Esconde barras de rolagem nativas para visual de totem 100% limpo */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  display: none;
 }
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
