@@ -343,7 +343,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
                 NOW(),
                 NOW()
               )
-              ON CONFLICT (organization_id, telefone) DO UPDATE SET
+              ON CONFLICT (organization_id, telefone) WHERE (telefone IS NOT NULL AND deleted_at IS NULL) DO UPDATE SET
                 nome = EXCLUDED.nome,
                 updated_at = NOW()
               RETURNING id, organization_id, nome, telefone, lifecycle_stage;
