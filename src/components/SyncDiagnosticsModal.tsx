@@ -72,18 +72,18 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/75 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-900/75 backdrop-blur-sm animate-in fade-in pt-safe pb-safe">
+      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[calc(100dvh-1.5rem)] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 my-auto">
         
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 flex-shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-teal-50 text-[#005F73] flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm flex-shrink-0">
               <Activity className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-slate-900">Diagnóstico de Rede & Sincronização</h2>
-              <p className="text-xs text-slate-500">Monitoramento em tempo real do status offline e banco Neon</p>
+              <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">Diagnóstico de Rede & Sincronização</h2>
+              <p className="text-[11px] sm:text-xs text-slate-500">Monitoramento em tempo real do status offline e banco Neon</p>
             </div>
           </div>
           <button
@@ -95,7 +95,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
         </div>
 
         {/* Conteúdo com Scroll */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 flex-1 text-xs">
           
           {/* Card de Qualidade de Rede e Latência */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -107,7 +107,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
                 <button
                   onClick={handlePing}
                   disabled={isPinging}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#005F73] hover:underline disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:underline disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3 h-3 ${isPinging ? 'animate-spin' : ''}`} />
                   <span>Testar Ping</span>
@@ -117,7 +117,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
                   status.networkQuality === 'excellent' || status.networkQuality === 'good'
-                    ? 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-blue-100 text-blue-700'
                     : status.networkQuality === 'poor'
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-rose-100 text-rose-700'
@@ -126,14 +126,24 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
                 </div>
                 <div>
                   <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                    {status.networkQuality === 'excellent' && '🟢 Conexão Excelente'}
-                    {status.networkQuality === 'good' && '🟢 Conexão Boa'}
+                    {status.networkQuality === 'excellent' && '🔵 Conexão Excelente'}
+                    {status.networkQuality === 'good' && '🔵 Conexão Boa'}
                     {status.networkQuality === 'poor' && '🟡 Conexão Lenta / Instável'}
                     {status.networkQuality === 'offline' && '🔴 Desconectado (Offline)'}
                     {status.networkQuality === 'checking' && '🔄 Verificando...'}
                   </div>
-                  <div className="text-slate-500 text-[11px]">
-                    {status.latencyMs ? `Latência de resposta: ${status.latencyMs} ms` : 'Sem resposta do servidor'}
+                  <div className="text-slate-500 text-[11px] flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                    <span>{status.latencyMs ? `Latência: ${status.latencyMs} ms` : 'Sem resposta do servidor'}</span>
+                    {status.edgeNode && (
+                      <span className="text-blue-700 bg-blue-100/70 px-1.5 py-0.5 rounded font-semibold text-[10px]">
+                        Edge: {status.edgeNode}
+                      </span>
+                    )}
+                    {status.usingHyperdrive && (
+                      <span className="text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded font-semibold text-[10px]">
+                        ⚡ Hyperdrive
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -147,12 +157,12 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-100 text-[#005F73] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
                   <HardDrive className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <ShieldCheck className="w-4 h-4 text-blue-600" />
                     <span>{status.storagePersisted ? 'Persistente (Blindado)' : 'Padrão'}</span>
                   </div>
                   <div className="text-slate-500 text-[11px]">
@@ -167,15 +177,19 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
           </div>
 
           {/* Fila de Sincronização com o Neon */}
-          <div className="bg-teal-50/60 rounded-2xl p-5 border border-teal-200/80 space-y-4">
+          <div className="bg-blue-50/60 rounded-2xl p-5 border border-blue-200/80 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                  <Server className="w-4 h-4 text-[#005F73]" />
+                  <Server className="w-4 h-4 text-blue-600" />
                   Status da Fila de Sincronização
                 </h4>
-                <p className="text-slate-600 text-[11px] mt-0.5">
-                  Endpoint configurado: <code>/api/sync</code> (Neon DB FisioFlow)
+                <p className="text-slate-600 text-[11px] mt-0.5 flex flex-wrap items-center gap-2">
+                  <span>Endpoint configurado: <code>/api/sync</code></span>
+                  <span className="inline-flex items-center gap-1 font-semibold text-[10px] text-slate-700 bg-white/80 border border-blue-200 px-2 py-0.5 rounded-full">
+                    Neon DB: {status.dbStatus === 'connected' ? '🟢 Conectado' : (status.dbStatus === 'error' ? '🔴 Erro' : '⚪ Verificando')}
+                    {status.dbLatencyMs ? ` (${status.dbLatencyMs}ms)` : ''}
+                  </span>
                 </p>
               </div>
 
@@ -193,7 +207,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
                 <button
                   onClick={handleForceSync}
                   disabled={status.isSyncing}
-                  className="px-4 py-2 rounded-xl bg-[#005F73] hover:bg-[#004655] text-white font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50"
                 >
                   <Zap className={`w-3.5 h-3.5 ${status.isSyncing ? 'animate-spin' : ''}`} />
                   <span>{status.isSyncing ? 'Sincronizando...' : 'Forçar Envio Agora'}</span>
@@ -215,7 +229,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
 
               <div className="bg-white p-3 rounded-xl border border-slate-200">
                 <div className="text-[10px] uppercase font-bold text-slate-400">Último Envio</div>
-                <div className="text-xs font-bold text-emerald-700 mt-1.5 truncate">
+                <div className="text-xs font-bold text-blue-700 mt-1.5 truncate">
                   {status.lastSyncedAt ? new Date(status.lastSyncedAt).toLocaleTimeString('pt-BR') : 'Nenhum'}
                 </div>
               </div>
@@ -233,7 +247,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                <Download className="w-3.5 h-3.5 text-[#005F73]" />
+                <Download className="w-3.5 h-3.5 text-blue-600" />
                 Backup de Emergência Completo (JSON)
               </div>
               <div className="text-slate-500 text-[11px] mt-0.5">
@@ -255,7 +269,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#005F73]" />
+                <Clock className="w-3.5 h-3.5 text-blue-600" />
                 Histórico das Últimas Sincronizações
               </h4>
               <span className="text-[10px] text-slate-400">Últimos {logs.length} eventos</span>
@@ -288,7 +302,7 @@ export const SyncDiagnosticsModal: React.FC<SyncDiagnosticsModalProps> = ({
                           </td>
                           <td className="px-3 py-2">
                             {log.status === 'success' ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
                                 <CheckCircle2 className="w-3 h-3" /> Sucesso
                               </span>
                             ) : (

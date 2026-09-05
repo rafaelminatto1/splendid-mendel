@@ -68,6 +68,10 @@ export interface SyncStatus {
   storagePersisted: boolean;
   storageUsageMb: number;
   storageQuotaMb: number;
+  edgeNode?: string | null;
+  dbStatus?: 'connected' | 'not_configured' | 'error' | 'checking';
+  dbLatencyMs?: number | null;
+  usingHyperdrive?: boolean;
 }
 
 export interface SyncLogEntry {

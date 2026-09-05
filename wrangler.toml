@@ -1,10 +1,27 @@
 name = "activity-eventos-totem"
 compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
 [placement]
 mode = "smart"
 
-# Secrets (DATABASE_URL, WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID)
-# are stored as encrypted Cloudflare Pages Secrets — NOT here.
-# To update: wrangler pages secret put <SECRET_NAME> --project-name activity-eventos-totem
+# Cloudflare Workers Paid: Hyperdrive Connection Pooling to Neon PostgreSQL (sa-east-1)
+# Hyperdrive eliminates TCP/TLS handshake latency and maintains regional pools connected to Neon.
+# Para criar o Hyperdrive no terminal:
+# wrangler hyperdrive create neon-totem-db --connection-string="postgres://[USER]:[PASS]@ep-wandering-bonus-acj4zwvo.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+# Descomente abaixo após criar o ID:
+# [[hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "seu-hyperdrive-id"
+
+# Cloudflare Workers Paid: Fila assíncrona opcional para dias de corrida com pico de 1.000+ participantes
+# [[queues.producers]]
+# queue = "totem-sync-queue"
+# binding = "SYNC_QUEUE"
+
+# Secrets criptografadas do Cloudflare Pages / Workers:
+# DATABASE_URL = postgres://[user]:[pass]@ep-wandering-bonus-acj4zwvo.sa-east-1.aws.neon.tech/neondb?sslmode=require
+# WHATSAPP_ACCESS_TOKEN
+# WHATSAPP_PHONE_NUMBER_ID
+# Atualizar com: wrangler pages secret put <SECRET_NAME> --project-name activity-eventos-totem

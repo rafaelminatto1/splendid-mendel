@@ -103,8 +103,8 @@ export const App: React.FC = () => {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen bg-[#F9F9F7] flex flex-col items-center justify-center p-4">
-        <div className="w-16 h-16 rounded-2xl bg-[#005F73] text-white flex items-center justify-center font-black text-2xl shadow-xl animate-pulse mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/60 via-slate-50 to-sky-50/50 flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-sky-600 text-white flex items-center justify-center font-black text-2xl shadow-xl shadow-blue-600/25 animate-pulse mb-4">
           A
         </div>
         <h2 className="text-xl font-extrabold text-slate-800">Activity Fisioterapia</h2>
@@ -114,8 +114,12 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full overflow-hidden flex flex-col bg-[#F9F9F7] text-slate-900 selection:bg-teal-100">
+    <div className="min-h-[100dvh] md:h-[100dvh] md:max-h-[100dvh] w-full overflow-x-hidden md:overflow-hidden flex flex-col bg-gradient-to-br from-[#F0F7FF] via-[#F8FAFC] to-[#E8F2FE] text-slate-900 selection:bg-blue-100 selection:text-blue-900 relative pl-safe pr-safe pb-safe">
       
+      {/* Luz ambiente de fundo sutil */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl pointer-events-none -z-0" />
+
       {/* Cabeçalho */}
       <Header
         eventos={eventos}
@@ -132,8 +136,8 @@ export const App: React.FC = () => {
         passcodeExitKiosk={settings.passcode_exit_kiosk}
       />
 
-      {/* Conteúdo Principal do Totem (ajustado para caber 100% no viewport do iPad) */}
-      <main className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-2 sm:p-3 lg:p-4">
+      {/* Conteúdo Principal do Totem (ajustado para caber 100% no viewport do iPad e com rolagem suave no iPhone) */}
+      <main className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex items-center justify-center p-2 sm:p-5 lg:p-6 xl:p-8 relative z-10 w-full">
         {settings.layout_mode === 'side_by_side' ? (
           <LayoutA_SideBySide
             evento={selectedEvento}

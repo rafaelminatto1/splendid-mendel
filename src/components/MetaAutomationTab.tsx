@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   MessageSquare, 
   Play, 
@@ -97,7 +97,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
             onClick={() => setActiveSubTab('envio_direto')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
               activeSubTab === 'envio_direto'
-                ? 'bg-emerald-600 text-white shadow-sm'
+                ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -108,7 +108,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
             onClick={() => setActiveSubTab('preview')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
               activeSubTab === 'preview'
-                ? 'bg-[#005F73] text-white shadow-sm'
+                ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -119,7 +119,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
             onClick={() => setActiveSubTab('json')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
               activeSubTab === 'json'
-                ? 'bg-[#005F73] text-white shadow-sm'
+                ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -130,7 +130,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
             onClick={() => setActiveSubTab('webhook')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
               activeSubTab === 'webhook'
-                ? 'bg-[#005F73] text-white shadow-sm'
+                ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -149,11 +149,11 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
         <div className="space-y-6">
           
           {/* Caixa de Ação Rápida */}
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 p-5 rounded-2xl border border-emerald-200/80 shadow-sm space-y-4">
+          <div className="bg-gradient-to-br from-blue-50/70 via-white to-sky-50/60 p-5 rounded-2xl border border-blue-200/80 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="font-black text-slate-900 text-base flex items-center gap-2">
-                  <Send className="w-4 h-4 text-emerald-600" />
+                  <Send className="w-4 h-4 text-blue-600" />
                   Envio Imediato de Template WhatsApp
                 </h3>
                 <p className="text-xs text-slate-600 mt-0.5">
@@ -166,7 +166,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
                   onClick={copyText}
                   className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-200 shadow-sm flex items-center gap-1.5 transition"
                 >
-                  {copiadoTexto ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiadoTexto ? <Check className="w-3.5 h-3.5 text-blue-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiadoTexto ? 'Mensagem Copiada!' : 'Copiar Mensagem'}</span>
                 </button>
                 <a
@@ -174,7 +174,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => handleSendDirect()}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-2 transition"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 flex items-center gap-2 transition"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Abrir WhatsApp e Enviar Já</span>
@@ -366,11 +366,11 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
                   {/* Texto com as 2 Variáveis Destacadas */}
                   <div className="p-3.5 text-[13px] leading-relaxed space-y-2.5">
                     <p>
-                      Oi, <span className="font-bold text-[#005F73] bg-teal-50 px-1 rounded">{displayFirstName}</span>! Tudo bem? 😊
+                      Oi, <span className="font-bold text-blue-700 bg-blue-50 px-1 rounded">{displayFirstName}</span>! Tudo bem? 😊
                     </p>
                     <p>
                       Aqui é da equipe da Activity Fisioterapia! Foi um prazer te conhecer na ação que realizamos no evento{' '}
-                      <span className="font-bold text-[#005F73] bg-teal-50 px-1 rounded">{eventName}</span> ✨
+                      <span className="font-bold text-blue-700 bg-blue-50 px-1 rounded">{eventName}</span> ✨
                     </p>
                     <p>
                       Como fomos parceiros do evento, você ganhou uma{' '}
@@ -410,7 +410,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
 
                     {/* Resposta Automática da Clínica pelo Bot */}
                     <div className="self-start bg-white text-slate-800 text-[13px] rounded-2xl rounded-tl-none p-3.5 shadow-md border border-slate-200/80 max-w-[90%] space-y-1 animate-in fade-in slide-in-from-bottom-3 duration-300">
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#005F73]">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600">
                         <Bot className="w-3.5 h-3.5" />
                         <span>Resposta Automática FisioFlow</span>
                       </div>
@@ -443,18 +443,18 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
           <div className="lg:col-span-5 space-y-4">
             <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200">
               <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-[#005F73]" />
+                <Sparkles className="w-4 h-4 text-blue-600" />
                 Mapeamento das 2 Variáveis Meta
               </h4>
               
               <div className="space-y-2.5 text-xs">
                 <div className="p-2.5 bg-white rounded-xl border border-slate-200">
-                  <div className="font-bold text-[#005F73]">Variável {'{{1}}'} — Primeiro Nome</div>
+                  <div className="font-bold text-blue-700">Variável {'{{1}}'} — Primeiro Nome</div>
                   <div className="text-slate-600 mt-0.5">Valor atual: <strong>{displayFirstName}</strong> (extraído do cadastro)</div>
                 </div>
 
                 <div className="p-2.5 bg-white rounded-xl border border-slate-200">
-                  <div className="font-bold text-[#005F73]">Variável {'{{2}}'} — Nome do Evento</div>
+                  <div className="font-bold text-blue-700">Variável {'{{2}}'} — Nome do Evento</div>
                   <div className="text-slate-600 mt-0.5">Valor atual: <strong>{eventName}</strong> (corrida, jiu-jitsu, etc.)</div>
                 </div>
               </div>
@@ -471,8 +471,8 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
             </div>
 
             {/* Caixa de Informações */}
-            <div className="bg-teal-50/70 rounded-2xl p-4 border border-teal-200 text-xs text-slate-700 leading-relaxed">
-              <div className="font-bold text-[#005F73] mb-1">Versatilidade Multi-Eventos:</div>
+            <div className="bg-blue-50/70 rounded-2xl p-4 border border-blue-200 text-xs text-slate-700 leading-relaxed">
+              <div className="font-bold text-blue-700 mb-1">Versatilidade Multi-Eventos:</div>
               O texto fixo usa a redação <em>"no evento {'{{2}}'}"</em>, funcionando com perfeita concordância gramatical tanto para corridas de rua quanto para aulas/campeonatos de Jiu-Jitsu, CrossFit, palestras e ações corporativas.
             </div>
           </div>
@@ -489,7 +489,7 @@ export const MetaAutomationTab: React.FC<MetaAutomationTabProps> = ({ evento }) 
             </p>
             <button
               onClick={copyJson}
-              className="py-1.5 px-3 rounded-lg bg-[#005F73] hover:bg-[#004655] text-white text-xs font-bold flex items-center gap-1.5 transition"
+              className="py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 transition"
             >
               {copiadoJson ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiadoJson ? 'Copiado!' : 'Copiar JSON'}</span>

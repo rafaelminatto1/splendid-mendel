@@ -160,8 +160,8 @@ class SyncService {
     const timeoutId = setTimeout(() => controller.abort(), 3500);
 
     try {
-      // Tenta rota de health ou fallback com favicon com timestamp anti-cache
-      const res = await fetch(`/api/health?_t=${Date.now()}`, {
+      // Tenta rota de health com checagem de banco e timestamp anti-cache
+      const res = await fetch(`/api/health?_t=${Date.now()}&check_db=true`, {
         method: 'GET',
         signal: controller.signal,
         cache: 'no-store',
@@ -171,6 +171,20 @@ class SyncService {
       const latency = Math.round(performance.now() - startTime);
       this.status.latencyMs = latency;
       this.status.isOnline = res.ok || res.status === 404; // 404 significa que chegou no servidor
+
+      if (res.ok) {
+        try {
+          const healthData = (await res.json()) as any;
+          if (healthData && typeof healthData === 'object') {
+            this.status.edgeNode = healthData.edge_node || 'sa-east-1';
+            this.status.dbStatus = healthData.db_status || 'connected';
+            this.status.dbLatencyMs = healthData.db_latency_ms ?? null;
+            this.status.usingHyperdrive = Boolean(healthData.using_hyperdrive);
+          }
+        } catch {
+          // Ignora falha de parse caso endpoint retorne formato alternativo
+        }
+      }
 
       if (latency < 180) {
         this.status.networkQuality = 'excellent';

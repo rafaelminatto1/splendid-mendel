@@ -7,6 +7,13 @@ import { neon } from '@neondatabase/serverless';
 interface Env {
   DATABASE_URL?: string;
   SYNC_SECRET?: string;
+  HYPERDRIVE?: {
+    connectionString: string;
+  };
+}
+
+export function getDbConnectionString(env: Env): string | null {
+  return env.HYPERDRIVE?.connectionString || env.DATABASE_URL || null;
 }
 
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
@@ -82,8 +89,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       let updatedLeadId: string | null = null;
       let contactId: string | null = null;
 
-      if (env.DATABASE_URL && cleanPhone) {
-        const sql = neon(env.DATABASE_URL);
+      const dbUrl = getDbConnectionString(env);
+      if (dbUrl && cleanPhone) {
+        const sql = neon(dbUrl);
         try {
           // Localiza o lead e atualiza o estágio no CRM
           const leadRows = await sql`
@@ -182,10 +190,11 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     let syncedLeadsCount = 0;
+    const dbUrl = getDbConnectionString(env);
 
-    // Se DATABASE_URL estiver configurada no Cloudflare Pages / Workers
-    if (env.DATABASE_URL) {
-      const sql = neon(env.DATABASE_URL);
+    // Se DATABASE_URL ou HYPERDRIVE estiverem configurados no Cloudflare Pages / Workers
+    if (dbUrl) {
+      const sql = neon(dbUrl);
 
       // Mapa para converter ids de eventos caso venham em formatos legados e cache de nomes
       const eventIdMap = new Map<string, string>();
@@ -432,7 +441,8 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         synced_leads: syncedLeadsCount,
         synced_eventos: eventos.length,
         errors: [],
-        persisted_to_neon: Boolean(env.DATABASE_URL),
+        persisted_to_neon: Boolean(dbUrl),
+        using_hyperdrive: Boolean(env.HYPERDRIVE?.connectionString),
         timestamp: new Date().toISOString(),
       }),
       {
@@ -468,13 +478,16 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     const url = new URL(request.url);
     const requestedOrg = url.searchParams.get('organization_id');
     const orgId = requestedOrg && UUID_REGEX.test(requestedOrg) ? requestedOrg : DEFAULT_ORG_ID;
+    const dbUrl = getDbConnectionString(env);
 
-    if (!env.DATABASE_URL) {
+    if (!dbUrl) {
       return new Response(
         JSON.stringify({
           ok: true,
           eventos: [],
           funnel_stats: {},
+          persisted_to_neon: false,
+          using_hyperdrive: false,
         }),
         {
           status: 200,
@@ -487,7 +500,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       );
     }
 
-    const sql = neon(env.DATABASE_URL);
+    const sql = neon(dbUrl);
 
     // Query Neon PostgreSQL table eventos for organization_id and (status = 'ativo' OR status IS NULL)
     const rows = await sql`

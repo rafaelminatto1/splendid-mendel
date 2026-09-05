@@ -3,11 +3,12 @@ import { QRCodeSVG } from 'qrcode.react';
 import { 
   User, 
   Phone, 
-  Instagram, 
   CheckCircle2, 
   Sparkles, 
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Camera,
+  ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { Evento, Participante } from '../types';
@@ -28,6 +29,7 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
   instagramHandle,
   instagramUrl,
 }) => {
+  const [mobileTab, setMobileTab] = useState<'form' | 'instagram'>('form');
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [aceitouComunicado, setAceitouComunicado] = useState(true);
@@ -38,7 +40,10 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    nameInputRef.current?.focus();
+    // Foco automático apenas em tablets/desktop para evitar abrir o teclado do iPhone na cara do usuário
+    if (window.innerWidth >= 768) {
+      nameInputRef.current?.focus();
+    }
   }, []);
 
   // Máscara dinâmica de telefone brasileiro (11) 98765-4321
@@ -105,7 +110,7 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
         particleCount: 45,
         spread: 55,
         origin: { y: 0.65 },
-        colors: ['#005F73', '#81B29A', '#38bdf8'],
+        colors: ['#2563EB', '#0284C7', '#38BDF8', '#60A5FA'],
       });
 
       setLastRegisteredName(formattedName.split(' ')[0]);
@@ -132,51 +137,96 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl h-full max-h-full flex flex-col justify-center px-2 sm:px-4 py-1 select-none overflow-y-auto">
+    <div className="w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[1400px] min-h-0 md:h-full max-h-full flex flex-col justify-center px-2 sm:px-6 lg:px-8 py-2 sm:py-4 select-none pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
       
       {/* Toast de Sucesso Flutuante */}
       {showSuccessToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-top-3 duration-200">
-          <CheckCircle2 className="w-5 h-5 text-white" />
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white px-5 sm:px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-200 border border-blue-400/30 max-w-[90vw]">
+          <CheckCircle2 className="w-6 h-6 text-white flex-shrink-0" />
           <div>
-            <p className="font-bold text-xs">Cadastro realizado com sucesso!</p>
-            <p className="text-[11px] text-emerald-100">
-              Obrigado, {lastRegisteredName}! Bom relaxamento na massagem.
+            <p className="font-extrabold text-sm">Cadastro realizado com sucesso!</p>
+            <p className="text-xs text-blue-100">
+              Obrigado, {lastRegisteredName}! Bom relaxamento na maca de massagem.
             </p>
           </div>
         </div>
       )}
 
-      {/* Grid Principal Compacto: 100% visível na tela sem rolar */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 lg:gap-5 items-stretch w-full max-h-[640px] my-auto">
-        
-        {/* LADO ESQUERDO: Formulário do Corredor (7 colunas) */}
-        <div className="md:col-span-7 bg-white rounded-2xl lg:rounded-3xl p-4 sm:p-5 lg:p-6 border border-slate-200/80 shadow-lg flex flex-col justify-between">
-          <div>
-            {/* Header da Ação */}
-            <div className="mb-3 sm:mb-4">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-50 text-[#005F73] text-[11px] font-bold mb-1.5 border border-teal-200/60">
-                <Sparkles className="w-3 h-3" />
-                <span>{evento?.nome || 'Atendimento de Massagem Esportiva'}</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                Check-in para Massagem
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Preencha seus dados rápidos para liberar sua massagem pós-prova.
-              </p>
-            </div>
+      {/* Seletor de Abas Móvel (Visível apenas em smartphones / telas menores que md) */}
+      <div className="flex md:hidden items-center p-1 bg-slate-200/80 rounded-2xl mb-3 shadow-inner w-full max-w-xs sm:max-w-sm mx-auto flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => setMobileTab('form')}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            mobileTab === 'form'
+              ? 'bg-white text-blue-700 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <User className="w-3.5 h-3.5" />
+          <span>Fazer Check-in</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('instagram')}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            mobileTab === 'instagram'
+              ? 'bg-white text-blue-700 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Camera className="w-3.5 h-3.5 text-blue-600" />
+          <span>Instagram & QR</span>
+        </button>
+      </div>
 
-            {/* Formulário */}
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
+      {/* Grid Principal: Adaptativo no iPhone e Lado a Lado no iPad */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5 lg:gap-7 xl:gap-8 items-stretch w-full min-h-0 max-h-none md:min-h-[560px] md:max-h-[720px] 2xl:max-h-[760px] my-auto">
+        
+        {/* LADO ESQUERDO: Formulário do Corredor (7 colunas no iPad, aba 'form' no iPhone) */}
+        <div className={`md:col-span-7 bg-white rounded-3xl p-5 sm:p-7 lg:p-9 xl:p-10 border border-slate-200/90 shadow-xl shadow-blue-950/5 flex-col justify-between ${mobileTab === 'form' ? 'flex' : 'hidden md:flex'}`}>
+          {/* Header da Ação */}
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold mb-2 border border-blue-200/70 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+              <span className="truncate max-w-[240px] sm:max-w-none">{evento?.nome || 'Atendimento de Massagem Esportiva'}</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+              Check-in para Massagem
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Preencha seus dados rápidos para liberar seu atendimento pós-prova.
+            </p>
+
+            {/* Atalho Rápido para Instagram no Mobile */}
+            <div className="flex md:hidden items-center justify-between p-2.5 px-3 rounded-2xl bg-blue-50/70 border border-blue-200/60 mt-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <Camera className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                <span className="text-xs font-bold text-slate-800 truncate">{instagramHandle}</span>
+              </div>
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-extrabold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1 active:scale-95 transition flex-shrink-0"
+              >
+                <span>Seguir</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+
+          {/* Formulário com Entradas Ergonômicas para Tela Touch */}
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between py-3 sm:py-4">
+            <div className="space-y-4 sm:space-y-5">
               {/* Campo Nome */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Nome Completo
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4" />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-5 h-5" />
                   </div>
                   <input
                     ref={nameInputRef}
@@ -185,108 +235,149 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     placeholder="Ex: Rafael Minatto"
-                    autoComplete="off"
+                    autoComplete="name"
                     autoCapitalize="words"
-                    className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-base sm:text-lg font-semibold placeholder:text-slate-400 focus:bg-white focus:border-[#005F73] focus:ring-2 focus:ring-[#005F73]/10 outline-none transition"
+                    enterKeyHint="next"
+                    className="w-full pl-12 pr-4 min-h-[50px] sm:min-h-[56px] rounded-2xl bg-slate-50/90 border border-slate-200 text-slate-900 text-base sm:text-lg font-bold placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 outline-none transition shadow-sm touch-manipulation"
                   />
                 </div>
               </div>
 
               {/* Campo Telefone */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Telefone / WhatsApp (com DDD)
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Phone className="w-4 h-4" />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                    <Phone className="w-5 h-5" />
                   </div>
                   <input
                     type="tel"
+                    inputMode="tel"
                     required
                     value={telefone}
                     onChange={handlePhoneChange}
                     placeholder="(11) 99999-9999"
-                    className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-base sm:text-lg font-semibold placeholder:text-slate-400 focus:bg-white focus:border-[#005F73] focus:ring-2 focus:ring-[#005F73]/10 outline-none transition"
+                    autoComplete="tel"
+                    enterKeyHint="done"
+                    className="w-full pl-12 pr-4 min-h-[50px] sm:min-h-[56px] rounded-2xl bg-slate-50/90 border border-slate-200 text-slate-900 text-base sm:text-lg font-bold placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 outline-none transition shadow-sm touch-manipulation"
                   />
                 </div>
               </div>
 
-              {/* Checkbox de Consentimento */}
-              <div className="pt-0.5">
-                <label className="flex items-start gap-2.5 cursor-pointer select-none group">
+              {/* Checkbox de Consentimento com Área de Toque Expandida */}
+              <div className="pt-1">
+                <label className="flex items-start gap-3 cursor-pointer select-none group p-1 -m-1 rounded-xl touch-manipulation">
                   <input
                     type="checkbox"
                     checked={aceitouComunicado}
                     onChange={(e) => setAceitouComunicado(e.target.checked)}
-                    className="w-4 h-4 rounded border-2 border-slate-300 text-[#005F73] focus:ring-0 mt-0.5 cursor-pointer flex-shrink-0"
+                    className="w-5 h-5 rounded-md border-2 border-slate-300 text-blue-600 focus:ring-0 mt-0.5 cursor-pointer flex-shrink-0 touch-manipulation"
                   />
-                  <div className="text-[11px] sm:text-xs text-slate-600 leading-snug">
+                  <div className="text-xs sm:text-sm text-slate-600 leading-snug">
                     <span className="font-bold text-slate-800">
                       Concordo em receber apenas um comunicado
                     </span>{' '}
-                    via WhatsApp com meu voucher de avaliação fisioterapêutica gratuita.
+                    via WhatsApp com meu voucher oficial de avaliação fisioterapêutica gratuita.
                   </div>
                 </label>
               </div>
+            </div>
 
-              {/* Botão de Envio Principal */}
+            {/* Botão de Envio Principal Posicionado com Harmonia */}
+            <div className="pt-4 sm:pt-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 sm:py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#005F73] to-[#004655] hover:from-[#004655] hover:to-[#003844] text-white text-base sm:text-lg font-bold tracking-tight shadow-lg shadow-[#005F73]/25 flex items-center justify-center gap-2.5 transition active:scale-[0.99] disabled:opacity-60"
+                className="w-full min-h-[52px] sm:min-h-[58px] py-3.5 sm:py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-600 to-blue-600 bg-[length:200%_auto] hover:bg-right hover:shadow-xl hover:shadow-blue-500/25 text-white text-base sm:text-xl font-black tracking-tight shadow-lg shadow-blue-600/20 flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] disabled:opacity-60 cursor-pointer touch-manipulation"
               >
-                <span>Confirmar e Fazer Massagem</span>
-                <ArrowRight className="w-5 h-5" />
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Registrando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Confirmar e Fazer Massagem</span>
+                    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </>
+                )}
               </button>
-            </form>
-          </div>
+            </div>
+          </form>
 
           {/* Rodapé LGPD */}
-          <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-            <div className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="mt-2 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+            <div className="flex items-center gap-1.5 font-medium">
+              <ShieldCheck className="w-4 h-4 text-blue-600" />
               <span>Protegido conforme LGPD</span>
             </div>
-            <span>Pressione <strong>Enter</strong></span>
+            <div className="hidden sm:flex items-center gap-1 text-[11px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">
+              <span>Pressione</span>
+              <strong className="font-bold text-slate-700">Enter ↵</strong>
+            </div>
           </div>
         </div>
 
-        {/* LADO DIREITO: Card do Instagram com QR Code Fixo (5 colunas) */}
-        <div className="md:col-span-5 bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 text-white rounded-2xl lg:rounded-3xl p-4 sm:p-5 border border-slate-800 shadow-lg flex flex-col items-center justify-between text-center relative overflow-hidden">
+        {/* LADO DIREITO: Card do Instagram com QR Code e Botão Direto (5 colunas no iPad, aba 'instagram' no iPhone) */}
+        <div className={`md:col-span-5 bg-gradient-to-br from-white via-blue-50/20 to-sky-50/30 text-slate-900 rounded-3xl p-5 sm:p-7 lg:p-8 border border-blue-100/90 shadow-xl shadow-blue-950/5 flex-col items-center justify-between text-center relative overflow-hidden ${mobileTab === 'instagram' ? 'flex' : 'hidden md:flex'}`}>
           
+          {/* Efeitos de Luz de Fundo Sutis */}
+          <div className="absolute -top-24 -right-24 w-60 h-60 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-sky-400/15 rounded-full blur-3xl pointer-events-none" />
+
           {/* Topo do Card Instagram */}
-          <div className="relative z-10 w-full">
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white mb-2 shadow-md shadow-rose-500/20">
-              <Instagram className="w-5 h-5" />
-            </div>
-            
-            <h3 className="text-lg sm:text-xl font-black tracking-tight text-white leading-tight">
-              Siga nosso Instagram
+          <div className="relative z-10 w-full flex flex-col items-center">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 leading-tight">
+              Siga a Activity
             </h3>
             
-            <p className="text-teal-400 font-bold text-sm mt-0.5">
-              {instagramHandle}
-            </p>
+            <div className="inline-flex items-center gap-1.5 mt-2 px-4 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 font-extrabold text-sm sm:text-base tracking-wide shadow-sm">
+              <span>{instagramHandle}</span>
+            </div>
             
-            <p className="text-[11px] text-slate-300 mt-1 max-w-xs mx-auto leading-tight">
-              Aponte a câmera para ver as fotos e stories da corrida!
+            <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xs mx-auto leading-relaxed">
+              Siga nosso perfil e garanta seu atendimento de massagem!
             </p>
           </div>
 
-          {/* Container do QR Code (Tamanho otimizado para caber na tela) */}
-          <div className="relative z-10 my-2.5 p-3 bg-white rounded-xl shadow-xl border-2 border-white/20 inline-block">
+          {/* QR Code com Tamanho Responsivo */}
+          <div className="relative z-10 my-3 sm:my-auto p-3.5 sm:p-5 bg-white rounded-3xl shadow-xl shadow-blue-900/5 border-2 border-blue-100 flex flex-col items-center transition-transform duration-300 hover:scale-[1.02]">
             <QRCodeSVG
               value={instagramUrl}
-              size={155}
+              size={190}
               level="H"
               includeMargin={false}
               fgColor="#0F172A"
             />
-            <div className="mt-1 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-              Aponte a Câmera
+            <div className="mt-2.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/80 text-blue-700 border border-blue-100/80 text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-sm">
+              <Camera className="w-3.5 h-3.5 text-blue-600" />
+              <span>Aponte a Câmera do Celular</span>
             </div>
           </div>
+
+          {/* Botão Direto para Quem Está no Próprio iPhone */}
+          <div className="relative z-10 w-full max-w-xs">
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition active:scale-[0.98]"
+            >
+              <span>Abrir Instagram no Celular</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setMobileTab('form')}
+              className="mt-2.5 md:hidden text-xs font-bold text-blue-600 hover:underline py-1 w-full text-center"
+            >
+              ← Voltar ao Formulário de Check-in
+            </button>
+          </div>
+
         </div>
 
       </div>

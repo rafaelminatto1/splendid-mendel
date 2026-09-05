@@ -67,8 +67,8 @@ export const EventModal: React.FC<EventModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 pt-safe pb-safe">
+      <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-8 shadow-2xl border border-slate-200 max-h-[calc(100dvh-2rem)] overflow-y-auto my-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -98,7 +98,7 @@ export const EventModal: React.FC<EventModalProps> = ({
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Corrida do Juventus 2026"
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold placeholder:text-slate-400 focus:bg-white focus:border-[#005F73] focus:ring-2 focus:ring-[#005F73]/20 outline-none transition"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition"
             />
           </div>
 
@@ -106,7 +106,7 @@ export const EventModal: React.FC<EventModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-[#005F73]" />
+                <Calendar className="w-3.5 h-3.5 text-blue-600" />
                 Data do Evento *
               </label>
               <input
@@ -114,19 +114,19 @@ export const EventModal: React.FC<EventModalProps> = ({
                 required
                 value={dataInicio}
                 onChange={(e) => setDataInicio(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#005F73] focus:ring-2 focus:ring-[#005F73]/20 outline-none transition"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Tag className="w-3.5 h-3.5 text-[#005F73]" />
+                <Tag className="w-3.5 h-3.5 text-blue-600" />
                 Categoria
               </label>
               <select
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#005F73] focus:ring-2 focus:ring-[#005F73]/20 outline-none transition"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition"
               >
                 <option value="Corrida de Rua">Corrida de Rua</option>
                 <option value="Meia Maratona / Maratona">Meia Maratona / Maratona</option>
@@ -141,7 +141,7 @@ export const EventModal: React.FC<EventModalProps> = ({
           {/* Local do Evento */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-[#005F73]" />
+              <MapPin className="w-3.5 h-3.5 text-blue-600" />
               Local / Endereço
             </label>
             <input
@@ -149,14 +149,14 @@ export const EventModal: React.FC<EventModalProps> = ({
               value={local}
               onChange={(e) => setLocal(e.target.value)}
               placeholder="Ex: Clube Atlético Juventus - Mooca / SP"
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold placeholder:text-slate-400 focus:bg-white focus:border-[#005F73] focus:ring-2 focus:ring-[#005F73]/20 outline-none transition"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition"
             />
           </div>
 
           {/* Estimativa de Participantes */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <Users className="w-3.5 h-3.5 text-[#005F73]" />
+              <Users className="w-3.5 h-3.5 text-blue-600" />
               Meta de Atendimentos Previstos
             </label>
             <input
@@ -165,7 +165,7 @@ export const EventModal: React.FC<EventModalProps> = ({
               max={10000}
               value={participantesPrevistos}
               onChange={(e) => setParticipantesPrevistos(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-[#005F73] focus:ring-2 focus:ring-[#005F73]/20 outline-none transition"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition"
             />
           </div>
 
@@ -181,7 +181,7 @@ export const EventModal: React.FC<EventModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl bg-[#005F73] hover:bg-[#004655] text-white text-sm font-bold shadow-md shadow-[#005F73]/25 flex items-center gap-2 transition disabled:opacity-60"
+              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-600/25 flex items-center gap-2 transition disabled:opacity-60"
             >
               <Check className="w-4 h-4" />
               <span>Salvar Evento</span>
