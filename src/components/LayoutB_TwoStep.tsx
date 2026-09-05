@@ -7,9 +7,7 @@ import {
   ArrowRight,
   RotateCcw,
   CheckCircle2, 
-  ShieldCheck,
-  Camera,
-  ExternalLink
+  ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import type { Evento, Participante } from '../types';
@@ -18,6 +16,22 @@ import { syncService } from '../services/syncService';
 
 import { formatNameTitleCase, isValidBrazilianCellPhone } from '../services/csvExport';
 import { DEFAULT_ORG_ID } from '../db';
+
+const InstagramIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg 
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+);
 
 interface LayoutBProps {
   evento: Evento | null;
@@ -137,12 +151,13 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
       await db.participantes.add(novoParticipante);
       syncService.updatePendingCount();
 
-      // Dispara confetes na tela
+      // Dispara confetes no centro da tela na frente de todas as camadas
       confetti({
         particleCount: 70,
         spread: 75,
-        origin: { y: 0.6 },
-        colors: ['#2563EB', '#0284C7', '#38BDF8', '#60A5FA'],
+        origin: { x: 0.5, y: 0.5 },
+        zIndex: 10000,
+        colors: ['#2563EB', '#0284C7', '#38BDF8', '#60A5FA', '#10B981'],
       });
 
       setRegisteredRunner(formattedName.split(' ')[0]);
@@ -220,30 +235,19 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
               </div>
 
               {/* O QR Code Responsivo */}
-              <div className="relative z-10 bg-white p-3.5 sm:p-5 rounded-3xl inline-block shadow-xl shadow-blue-900/5 border-2 border-blue-100 mb-2 sm:mb-3 transition-transform hover:scale-105">
+              <div className="relative z-10 bg-white p-4 sm:p-5 rounded-3xl inline-block shadow-xl shadow-blue-900/5 border-2 border-blue-100 mb-2 sm:mb-3 transition-transform hover:scale-105">
                 <QRCodeSVG
                   value={instagramUrl}
-                  size={190}
+                  size={240}
                   level="H"
                   includeMargin={false}
                   fgColor="#0F172A"
                 />
-                <div className="mt-2.5 flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/80 text-blue-700 border border-blue-100/80 text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-sm">
-                  <Camera className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Aponte a Câmera do Celular</span>
+                <div className="mt-3 flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50/90 text-blue-700 border border-blue-100/90 text-xs sm:text-sm font-black uppercase tracking-wider shadow-sm">
+                  <InstagramIcon className="w-4 h-4 text-blue-600" />
+                  <span>Siga-nos no Instagram</span>
                 </div>
               </div>
-
-              {/* Botão Direto para quem está no iPhone */}
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative z-10 w-full max-w-xs mt-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition active:scale-[0.98]"
-              >
-                <span>Abrir Instagram no Celular</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
 
               <p className="relative z-10 text-xs text-slate-500 leading-relaxed max-w-xs mx-auto mt-2">
                 Siga-nos para acompanhar fotos e novidades das corridas!
