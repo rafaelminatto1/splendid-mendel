@@ -422,12 +422,19 @@ export class MockPostgresDB {
       const orgId = params[1] || DEFAULT_ORG_ID;
       const nome = params[2];
       const tel = params[3];
+      const createdAtParam = params[4];
+      const createdAt = createdAtParam 
+        ? (createdAtParam instanceof Date ? createdAtParam.toISOString() : String(createdAtParam))
+        : new Date().toISOString();
 
       // Check unique constraint uq_contacts_org_phone
       for (const existing of this.contacts.values()) {
         if (existing.organization_id === orgId && existing.telefone === tel && !existing.deleted_at) {
           if (normalized.includes('DO UPDATE')) {
             existing.nome = nome;
+            if (new Date(createdAt) < new Date(existing.created_at)) {
+              existing.created_at = createdAt;
+            }
             existing.updated_at = new Date().toISOString();
             return [existing];
           } else if (normalized.includes('DO NOTHING')) {
@@ -444,7 +451,7 @@ export class MockPostgresDB {
         telefone: tel,
         lifecycle_stage: 'lead',
         primary_patient_id: null,
-        created_at: new Date().toISOString(),
+        created_at: createdAt,
         updated_at: new Date().toISOString(),
         deleted_at: null,
       };
@@ -504,6 +511,10 @@ export class MockPostgresDB {
       const interesse = params[6];
       const contactId = params[7] || null;
       const metadata = typeof params[8] === 'string' ? JSON.parse(params[8]) : (params[8] || {});
+      const createdAtParam = params[9];
+      const createdAt = createdAtParam 
+        ? (createdAtParam instanceof Date ? createdAtParam.toISOString() : String(createdAtParam))
+        : new Date().toISOString();
 
       // FK validation: contact_id
       if (contactId && !this.contacts.has(contactId)) {
@@ -520,7 +531,7 @@ export class MockPostgresDB {
         interesse,
         contact_id: contactId,
         metadata,
-        created_at: new Date().toISOString(),
+        created_at: createdAt,
         updated_at: new Date().toISOString(),
       };
       this.leads.set(id, lead);
@@ -551,6 +562,12 @@ export class MockPostgresDB {
             lead.metadata = typeof params[3] === 'string' ? JSON.parse(params[3]) : params[3];
           } catch {
             lead.metadata = params[3];
+          }
+          if (params[4]) {
+            const newCreatedAt = params[4] instanceof Date ? params[4].toISOString() : String(params[4]);
+            if (new Date(newCreatedAt) < new Date(lead.created_at)) {
+              lead.created_at = newCreatedAt;
+            }
           }
         }
         lead.updated_at = new Date().toISOString();

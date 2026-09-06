@@ -386,7 +386,9 @@ export const EventManagementModal: React.FC<EventManagementModalProps> = ({
                       <tr>
                         <th className="px-4 py-3">Corredor</th>
                         <th className="px-4 py-3">Telefone / WhatsApp</th>
-                        <th className="px-4 py-3">Data / Horário</th>
+                        <th className="px-4 py-3" title="Horário em que o corredor preencheu o formulário no totem">
+                          Preenchimento Form.
+                        </th>
                         <th className="px-4 py-3 text-center">Opt-in LGPD</th>
                         <th className="px-4 py-3 text-center">Status</th>
                         <th className="px-4 py-3 text-center">Status CRM</th>
@@ -443,7 +445,8 @@ export const EventManagementModal: React.FC<EventManagementModalProps> = ({
                                 </a>
                               </td>
                               <td className="px-4 py-3 text-slate-500">
-                                {data} às {hora}
+                                <div className="font-semibold text-slate-700">{data} às {hora}</div>
+                                <div className="text-[10px] text-slate-400">Preenchido no formulário</div>
                               </td>
                               <td className="px-4 py-3 text-center">
                                 {p.aceitou_comunicado ? (
