@@ -156,4 +156,104 @@ export const tier3Tests = {
     const allParts = Array.from(db.participantes.values()).filter(p => p.evento_id === eventId);
     assertEquals(allParts.length, 2, 'Total participants is exactly 2, no duplicates for Runner Um');
   },
+
+  /**
+   * T3.4: Offline registration form timestamp preservation
+   * Verifies that when participants register offline at different times,
+   * the sync records their actual form submission timestamps in leads, contacts, and participantes,
+   * rather than the synchronization timestamp.
+   */
+  async test_offline_form_submission_timestamp_preservation(harness) {
+    const db = harness.getDb();
+    const eventId = crypto.randomUUID();
+    const eventName = 'Meia Maratona do Ibirapuera';
+    db.eventos.set(eventId, {
+      id: eventId,
+      organization_id: DEFAULT_ORG_ID,
+      nome: eventName,
+      status: 'ativo',
+    });
+
+    const timeP1 = '2026-09-05T07:15:30.000Z';
+    const timeP2 = '2026-09-05T08:45:10.000Z';
+    const timeP3 = '2026-09-05T10:30:00.000Z';
+    const syncTime = '2026-09-05T14:00:00.000Z';
+
+    const p1Id = crypto.randomUUID();
+    const p2Id = crypto.randomUUID();
+    const p3Id = crypto.randomUUID();
+
+    // Sincronização em lote horas após a corrida
+    const syncRes = await harness.invokeApiSync('POST', {
+      body: {
+        organization_id: DEFAULT_ORG_ID,
+        sync_timestamp: syncTime,
+        participantes: [
+          {
+            id: p1Id,
+            evento_id: eventId,
+            nome: 'Renato Oliveira',
+            contato: '(11) 97111-2222',
+            segue_perfil: true,
+            aceitou_comunicado: true,
+            created_at: timeP1,
+          },
+          {
+            id: p2Id,
+            evento_id: eventId,
+            nome: 'Beatriz Costa',
+            contato: '(11) 97333-4444',
+            segue_perfil: true,
+            aceitou_comunicado: true,
+            created_at: timeP2,
+          },
+          {
+            id: p3Id,
+            evento_id: eventId,
+            nome: 'Danilo Silva',
+            contato: '(11) 97555-6666',
+            segue_perfil: true,
+            aceitou_comunicado: true,
+            created_at: timeP3,
+          },
+        ],
+      },
+    });
+
+    assertEquals(syncRes.status, 200, 'Batch sync must succeed');
+
+    // 1. Validar participantes no banco
+    const p1 = db.participantes.get(p1Id);
+    const p2 = db.participantes.get(p2Id);
+    const p3 = db.participantes.get(p3Id);
+    assertEquals(p1.created_at, timeP1, 'Participante 1 must preserve form fill time');
+    assertEquals(p2.created_at, timeP2, 'Participante 2 must preserve form fill time');
+    assertEquals(p3.created_at, timeP3, 'Participante 3 must preserve form fill time');
+
+    // 2. Validar leads no CRM
+    const leads = Array.from(db.leads.values());
+    const lead1 = leads.find(l => l.telefone === '11971112222');
+    const lead2 = leads.find(l => l.telefone === '11973334444');
+    const lead3 = leads.find(l => l.telefone === '11975556666');
+
+    assertNotNull(lead1, 'Lead 1 must exist');
+    assertNotNull(lead2, 'Lead 2 must exist');
+    assertNotNull(lead3, 'Lead 3 must exist');
+
+    assertEquals(lead1.created_at, timeP1, 'Lead 1 created_at must match form submission time (07:15)');
+    assertEquals(lead2.created_at, timeP2, 'Lead 2 created_at must match form submission time (08:45)');
+    assertEquals(lead3.created_at, timeP3, 'Lead 3 created_at must match form submission time (10:30)');
+
+    // 3. Validar metadata de auditoria
+    assertEquals(lead1.metadata.formulario_preenchido_em, timeP1, 'Metadata must record exact form fill time');
+    assertNotNull(lead1.metadata.sincronizado_em, 'Metadata must record sync time');
+
+    // 4. Validar contacts
+    const contact1 = db.contacts.get(lead1.contact_id);
+    const contact2 = db.contacts.get(lead2.contact_id);
+    const contact3 = db.contacts.get(lead3.contact_id);
+    assertEquals(contact1.created_at, timeP1, 'Contact 1 created_at must match form submission time');
+    assertEquals(contact2.created_at, timeP2, 'Contact 2 created_at must match form submission time');
+    assertEquals(contact3.created_at, timeP3, 'Contact 3 created_at must match form submission time');
+  },
 };
