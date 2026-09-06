@@ -17,6 +17,7 @@ class SyncService {
   };
 
   private listeners: Set<(status: SyncStatus) => void> = new Set();
+  private eventUpdateListeners: Set<(eventos: Evento[]) => void> = new Set();
   private autoSyncInterval: any = null;
   private healthCheckInterval: any = null;
   private consecutiveFailures = 0;
@@ -24,20 +25,20 @@ class SyncService {
 
   constructor() {
     if (typeof window !== 'undefined') {
+      // Detecção quase instantânea de rede
       window.addEventListener('online', () => this.handleNetworkEvent(true));
       window.addEventListener('offline', () => this.handleNetworkEvent(false));
 
-      // Inicia verificação periódica de saúde de rede (a cada 15 segundos)
-      this.healthCheckInterval = setInterval(() => {
-        this.probeNetworkHealth();
-      }, 15000);
-
-      // Inicia sincronizador automático com verificação de backoff
-      this.autoSyncInterval = setInterval(() => {
-        if (this.status.isOnline && !this.status.isSyncing && Date.now() >= this.backoffUntil) {
-          this.syncPendingData();
+      // Reativação quando o operador acorda o tablet / volta para o app
+      window.addEventListener('focus', () => this.handleWakeOrFocus());
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.handleWakeOrFocus();
         }
-      }, 10000);
+      });
+
+      // Configura intervalos adaptativos
+      this.resetIntervals();
 
       // Checagem inicial de storage e contadores
       this.refreshStorageAndCounts();
@@ -52,28 +53,93 @@ class SyncService {
     return () => this.listeners.delete(callback);
   }
 
+  public onEventsUpdated(callback: (eventos: Evento[]) => void): () => void {
+    this.eventUpdateListeners.add(callback);
+    return () => this.eventUpdateListeners.delete(callback);
+  }
+
   private notify() {
     for (const listener of this.listeners) {
       listener({ ...this.status });
     }
   }
 
-  private async handleNetworkEvent(isOnline: boolean) {
-    this.status.isOnline = isOnline;
+  private notifyEventsUpdated(eventos: Evento[]) {
+    for (const listener of this.eventUpdateListeners) {
+      try {
+        listener(eventos);
+      } catch (err) {
+        console.warn('Erro em listener onEventsUpdated:', err);
+      }
+    }
+  }
+
+  /**
+   * Reconfigura temporizadores adaptativos:
+   * Se offline, checa com maior frequência (a cada 3s) para detectar a volta imediatamente.
+   * Se online, checa a cada 15s e sincroniza a cada 10s.
+   */
+  private resetIntervals() {
+    if (this.healthCheckInterval) clearInterval(this.healthCheckInterval);
+    if (this.autoSyncInterval) clearInterval(this.autoSyncInterval);
+
+    // Quando offline, intervalo curto (3.5s) para detectar reconexão imediatamente
+    const checkIntervalMs = this.status.isOnline ? 15000 : 3500;
+    this.healthCheckInterval = setInterval(() => {
+      this.probeNetworkHealth();
+    }, checkIntervalMs);
+
+    this.autoSyncInterval = setInterval(() => {
+      if (this.status.isOnline && !this.status.isSyncing && Date.now() >= this.backoffUntil) {
+        this.syncPendingData();
+      }
+    }, 10000);
+  }
+
+  /**
+   * Chamado quando o app é colocado em foco ou desbloqueado no iPad/dispositivo
+   */
+  private handleWakeOrFocus() {
+    if (typeof navigator !== 'undefined' && navigator.onLine && !this.status.isOnline) {
+      // Estava marcado como offline mas o navegador diz que está online: trata como reconexão
+      this.handleNetworkEvent(true);
+    } else if (this.status.isOnline && !this.status.isSyncing) {
+      // Já online e não sincronizando: apenas verifica latência e envia pendências
+      this.probeNetworkHealth().catch(() => {});
+      this.syncPendingData().catch(() => {});
+    }
+  }
+
+  /**
+   * Tratamento imediato de eventos de rede
+   */
+  private handleNetworkEvent(isOnline: boolean) {
     if (!isOnline) {
+      this.status.isOnline = false;
       this.status.networkQuality = 'offline';
       this.status.latencyMs = null;
       this.notify();
+      this.resetIntervals();
     } else {
-      this.status.networkQuality = 'checking';
+      // 1. Imediato (0ms): atualiza status para online imediatamente na UI
+      this.status.isOnline = true;
+      this.status.networkQuality = 'good';
+      this.consecutiveFailures = 0;
+      this.backoffUntil = 0;
+      this.status.lastError = null;
       this.notify();
-      await this.probeNetworkHealth();
-      if (this.status.isOnline) {
-        this.consecutiveFailures = 0;
-        this.backoffUntil = 0;
-        this.syncPendingData();
-        this.pullActiveEvents().catch(() => {});
-      }
+      this.resetIntervals();
+
+      // 2. Dispara imediatamente a sincronização de dados com o CRM FisioFlow e puxa eventos da nuvem
+      this.syncPendingData(true).catch(err => {
+        console.warn('Erro ao sincronizar dados pendentes ao voltar online:', err);
+      });
+      this.pullActiveEvents().catch(err => {
+        console.warn('Erro ao atualizar eventos ao voltar online:', err);
+      });
+
+      // 3. Em segundo plano afere a latência e saúde exata da rede
+      this.probeNetworkHealth().catch(() => {});
     }
   }
 
@@ -143,10 +209,10 @@ class SyncService {
 
 
   /**
-   * Prova real de rede (ping HTTP com timeout de 3.5s).
-   * Distingue conexão real ativa de captive portals ou perda de pacotes.
+   * Prova real de rede (ping HTTP ágil com timeout de 2.5s).
+   * Distingue conexão real ativa de perda de pacotes sem causar falsos negativos.
    */
-  public async probeNetworkHealth(): Promise<NetworkQuality> {
+  public async probeNetworkHealth(forceDbCheck = false): Promise<NetworkQuality> {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       this.status.isOnline = false;
       this.status.networkQuality = 'offline';
@@ -157,11 +223,11 @@ class SyncService {
 
     const startTime = performance.now();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
 
     try {
-      // Tenta rota de health com checagem de banco e timestamp anti-cache
-      const res = await fetch(`/api/health?_t=${Date.now()}&check_db=true`, {
+      const checkParam = forceDbCheck ? '&check_db=true' : '';
+      const res = await fetch(`/api/health?_t=${Date.now()}${checkParam}`, {
         method: 'GET',
         signal: controller.signal,
         cache: 'no-store',
@@ -170,7 +236,7 @@ class SyncService {
 
       const latency = Math.round(performance.now() - startTime);
       this.status.latencyMs = latency;
-      this.status.isOnline = res.ok || res.status === 404; // 404 significa que chegou no servidor
+      this.status.isOnline = true; // Servidor respondeu (200 ou 404), conexão confirmada
 
       if (res.ok) {
         try {
@@ -182,23 +248,29 @@ class SyncService {
             this.status.usingHyperdrive = Boolean(healthData.using_hyperdrive);
           }
         } catch {
-          // Ignora falha de parse caso endpoint retorne formato alternativo
+          // Formato alternativo
         }
       }
 
-      if (latency < 180) {
+      if (latency < 200) {
         this.status.networkQuality = 'excellent';
-      } else if (latency < 600) {
+      } else if (latency < 700) {
         this.status.networkQuality = 'good';
       } else {
         this.status.networkQuality = 'poor';
       }
-    } catch (err: any) {
+    } catch {
       clearTimeout(timeoutId);
-      // Se falhou o ping mas navigator.onLine é true, a internet está oscilando ou bloqueada
-      this.status.latencyMs = null;
-      this.status.networkQuality = 'offline';
-      this.status.isOnline = false;
+      // Se navigator.onLine for true, a rede física está ativa mas o servidor pode estar em cold-start
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        this.status.isOnline = true;
+        this.status.networkQuality = 'poor';
+        this.status.latencyMs = null;
+      } else {
+        this.status.latencyMs = null;
+        this.status.networkQuality = 'offline';
+        this.status.isOnline = false;
+      }
     }
 
     this.notify();
@@ -225,12 +297,14 @@ class SyncService {
       return { synced: 0, failed: 0 };
     }
 
-    // Testa saúde da rede antes de enviar
-    const quality = await this.probeNetworkHealth();
-    if (quality === 'offline') {
-      this.status.lastError = 'Sem conexão com a internet. Registros mantidos offline no iPad.';
-      this.notify();
-      return { synced: 0, failed: unsynced.length };
+    // Testa saúde da rede antes de enviar — pula se já sabemos que estamos online
+    if (!this.status.isOnline) {
+      const quality = await this.probeNetworkHealth();
+      if (quality === 'offline') {
+        this.status.lastError = 'Sem conexão com a internet. Registros mantidos offline no iPad.';
+        this.notify();
+        return { synced: 0, failed: unsynced.length };
+      }
     }
 
     this.status.isSyncing = true;
@@ -471,6 +545,9 @@ class SyncService {
       if (validEventos.length > 0) {
         // bulkPut faz upsert dos eventos sem limpar ou descartar eventos existentes
         await db.eventos.bulkPut(validEventos);
+        const allUpdated = await db.eventos.toArray();
+        this.notifyEventsUpdated(allUpdated);
+        return allUpdated;
       }
 
       return db.eventos.toArray();

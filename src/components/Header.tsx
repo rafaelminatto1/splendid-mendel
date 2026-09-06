@@ -291,6 +291,11 @@ export const Header: React.FC<HeaderProps> = ({
                   <span className="font-medium text-slate-800 truncate text-xs">
                     {selectedEvento ? selectedEvento.nome : 'Selecionar Evento'}
                   </span>
+                  {selectedEvento && closestEvent && selectedEvento.id === closestEvent.id && (
+                    <span className="bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 hidden xl:inline">
+                      Mais próximo
+                    </span>
+                  )}
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-slate-600' : ''}`} />
               </button>
@@ -391,11 +396,16 @@ export const Header: React.FC<HeaderProps> = ({
               {syncStatus.isOnline ? (
                 <>
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                   </span>
-                  <span className="text-blue-700 text-xs">Online</span>
-                  {syncStatus.latencyMs && (
+                  <span className="text-emerald-700 text-xs font-bold">Online</span>
+                  {syncStatus.isSyncing && (
+                    <span className="text-[10px] text-blue-600 animate-pulse hidden xl:inline font-medium">
+                      • enviando CRM...
+                    </span>
+                  )}
+                  {syncStatus.latencyMs && !syncStatus.isSyncing && (
                     <span className="text-[10px] text-slate-400 hidden xl:inline">
                       {syncStatus.latencyMs}ms
                     </span>
@@ -404,7 +414,7 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <>
                   <WifiOff className="w-3.5 h-3.5 text-amber-600" />
-                  <span className="text-amber-700 text-xs">Offline</span>
+                  <span className="text-amber-700 text-xs font-bold">Offline</span>
                   {syncStatus.pendingCount > 0 && (
                     <span className="bg-amber-100 text-amber-800 text-[10px] font-semibold px-1 rounded-full">
                       {syncStatus.pendingCount}

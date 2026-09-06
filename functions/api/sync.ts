@@ -45,6 +45,20 @@ function formatDateYMD(val?: any): string | null {
 }
 
 /**
+ * Converte timestamp em string ISO 8601 segura com fallback para data/hora atual.
+ */
+function parseTimestampOrNow(val?: any): string {
+  if (!val) return new Date().toISOString();
+  if (typeof val === 'string') {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  } else if (val instanceof Date && !isNaN(val.getTime())) {
+    return val.toISOString();
+  }
+  return new Date().toISOString();
+}
+
+/**
  * Limpa e higieniza o número de telefone para WhatsApp (DDD + dígitos, ex: 11987654321).
  * Remove o código de país 55 caso venha com 12 ou 13 dígitos.
  */
@@ -289,6 +303,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
             ? `${p.observacoes} | LGPD: ${aceitouLgpd ? 'SIM' : 'NÃO'}`
             : `Cadastro Totem | LGPD: ${aceitouLgpd ? 'SIM' : 'NÃO'}`;
 
+          const participantCreatedAt = parseTimestampOrNow(p.created_at);
+          const formFilledAt = participantCreatedAt;
+
           await sql`
             INSERT INTO participantes (
               id, organization_id, evento_id, nome, contato, instagram, segue_perfil, aceitou_comunicado, observacoes, created_at, updated_at
@@ -302,7 +319,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
               ${Boolean(p.segue_perfil)},
               ${aceitouLgpd},
               ${obsFormatada},
-              ${p.created_at ? new Date(p.created_at) : new Date()},
+              ${participantCreatedAt},
               NOW()
             )
             ON CONFLICT (id) DO UPDATE SET
@@ -312,6 +329,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
               segue_perfil = EXCLUDED.segue_perfil,
               aceitou_comunicado = EXCLUDED.aceitou_comunicado,
               observacoes = EXCLUDED.observacoes,
+              created_at = LEAST(participantes.created_at, EXCLUDED.created_at),
               updated_at = NOW();
           `;
 
@@ -340,11 +358,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
                 ${p.nome},
                 ${cleanPhone},
                 'lead',
-                NOW(),
+                ${participantCreatedAt},
                 NOW()
               )
               ON CONFLICT (organization_id, telefone) WHERE (telefone IS NOT NULL AND deleted_at IS NULL) DO UPDATE SET
                 nome = EXCLUDED.nome,
+                created_at = LEAST(contacts.created_at, EXCLUDED.created_at),
                 updated_at = NOW()
               RETURNING id, organization_id, nome, telefone, lifecycle_stage;
             `;
@@ -359,10 +378,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
             categoria: 'corrida',
             segue_perfil: Boolean(p.segue_perfil),
             totem_kiosk: true,
+            formulario_preenchido_em: formFilledAt,
+            sincronizado_em: new Date().toISOString(),
           };
 
           const candidateLeads = await sql`
-            SELECT id, organization_id, nome, telefone, origem, estagio, interesse, contact_id, metadata
+            SELECT id, organization_id, nome, telefone, origem, estagio, interesse, contact_id, metadata, created_at
             FROM leads
             WHERE telefone = ${cleanPhone}
           `;
@@ -395,6 +416,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
                 interesse = ${leadInteresse},
                 contact_id = ${contactId},
                 metadata = ${JSON.stringify(leadMetadata)}::jsonb,
+                created_at = LEAST(leads.created_at, ${participantCreatedAt}),
                 updated_at = NOW()
               WHERE id = ${existingLead.id}
             `;
@@ -424,7 +446,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
                 ${leadInteresse},
                 ${contactId},
                 ${JSON.stringify(leadMetadata)}::jsonb,
-                NOW(),
+                ${participantCreatedAt},
                 NOW()
               );
             `;

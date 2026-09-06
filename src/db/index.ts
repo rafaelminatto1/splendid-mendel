@@ -88,7 +88,8 @@ export const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 /**
  * Encontra o evento cuja data de início está mais próxima da data atual (hoje),
- * priorizando eventos com status 'ativo'.
+ * priorizando eventos com status 'ativo' e preferindo eventos de hoje ou futuros próximos
+ * em caso de empate com eventos passados para evitar erros operacionais em campo.
  */
 export function findClosestEvent(eventos: Evento[]): Evento | null {
   if (!eventos || eventos.length === 0) return null;
@@ -99,8 +100,9 @@ export function findClosestEvent(eventos: Evento[]): Evento | null {
   const now = new Date();
   const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
-  let closest: Evento = pool[0];
+  let closest: Evento | null = null;
   let minDiff = Infinity;
+  let closestDateMs = 0;
 
   for (const ev of pool) {
     if (!ev.data_inicio) continue;
@@ -108,15 +110,23 @@ export function findClosestEvent(eventos: Evento[]): Evento | null {
     if (parts.length < 3) continue;
     
     const evDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+    if (isNaN(evDate)) continue;
+
     const diff = Math.abs(evDate - todayMs);
 
-    if (diff < minDiff) {
+    // Se for mais próximo, ou se tiver a mesma distância mas for futuro/hoje enquanto o anterior era passado
+    if (
+      closest === null ||
+      diff < minDiff ||
+      (diff === minDiff && evDate >= todayMs && closestDateMs < todayMs)
+    ) {
       minDiff = diff;
       closest = ev;
+      closestDateMs = evDate;
     }
   }
 
-  return closest;
+  return closest || pool[0] || null;
 }
 
 /**
@@ -186,12 +196,24 @@ export async function initializeDatabase(): Promise<AppSettings> {
       currentSettings.active_evento_id = closest.id;
       await db.settings.put(currentSettings);
     }
-  } else if (!currentSettings.active_evento_id) {
+  } else {
     const all = await db.eventos.toArray();
-    const closest = findClosestEvent(all);
-    if (closest) {
-      currentSettings.active_evento_id = closest.id;
-      await db.settings.put(currentSettings);
+    const saved = currentSettings.active_evento_id
+      ? all.find(e => e.id === currentSettings!.active_evento_id)
+      : null;
+
+    // Re-seleciona se: nenhum evento salvo, evento salvo não existe mais,
+    // ou evento salvo está concluído enquanto há um ativo mais próximo disponível.
+    const needsReselect =
+      !saved ||
+      (saved.status === 'concluido' && all.some(e => e.status === 'ativo'));
+
+    if (needsReselect) {
+      const closest = findClosestEvent(all);
+      if (closest) {
+        currentSettings.active_evento_id = closest.id;
+        await db.settings.put(currentSettings);
+      }
     }
   }
 
