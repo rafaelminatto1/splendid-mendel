@@ -312,15 +312,11 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
 
           {/* Topo do Card Instagram */}
           <div className="relative z-10 w-full flex flex-col items-center">
-            <h3 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 leading-tight">
-              Siga a Activity
-            </h3>
-            
             <a
               href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-2 px-4 py-1 rounded-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200/80 text-blue-700 font-extrabold text-sm sm:text-base tracking-wide shadow-sm transition active:scale-95"
+              className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200/80 text-blue-700 font-extrabold text-sm sm:text-base tracking-wide shadow-sm transition active:scale-95"
             >
               <span>{instagramHandle}</span>
             </a>
@@ -334,7 +330,7 @@ export const LayoutA_SideBySide: React.FC<LayoutAProps> = ({
           <div className="relative z-10 my-3 sm:my-auto p-4 sm:p-5 bg-white rounded-3xl shadow-xl shadow-blue-900/5 border-2 border-blue-100 flex flex-col items-center transition-transform duration-300 hover:scale-[1.02]">
             <QRCodeSVG
               value={instagramUrl}
-              size={240}
+              size={320}
               level="H"
               includeMargin={false}
               fgColor="#0F172A"
