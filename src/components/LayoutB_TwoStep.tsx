@@ -226,10 +226,6 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
               <div className="absolute -top-20 -right-20 w-48 h-48 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-sky-400/15 rounded-full blur-2xl pointer-events-none" />
 
-              <h3 className="relative z-10 text-xl font-black text-slate-900 leading-tight">
-                Siga a Activity
-              </h3>
-
               <div className="relative z-10 inline-flex items-center gap-1.5 mt-1 px-3.5 py-0.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 font-extrabold text-sm mb-3">
                 <span>{instagramHandle}</span>
               </div>
@@ -238,7 +234,7 @@ export const LayoutB_TwoStep: React.FC<LayoutBProps> = ({
               <div className="relative z-10 bg-white p-4 sm:p-5 rounded-3xl inline-block shadow-xl shadow-blue-900/5 border-2 border-blue-100 mb-2 sm:mb-3 transition-transform hover:scale-105">
                 <QRCodeSVG
                   value={instagramUrl}
-                  size={240}
+                  size={320}
                   level="H"
                   includeMargin={false}
                   fgColor="#0F172A"
